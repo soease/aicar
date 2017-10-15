@@ -1,0 +1,42 @@
+package main
+
+import (
+	//"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strings"
+)
+
+var WaitRunCommand string
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	var cmd string
+	r.ParseForm()
+	//fmt.Println(r.Form)
+	if len(r.Form["set"]) > 0 { //串口命令
+		cmd = strings.ToUpper(r.Form["set"][0])
+		WaitRunCommand = cmd
+		io.WriteString(w, cmd)
+		log.Println("设置指令: " + WaitRunCommand)
+		return
+	}
+	if len(r.Form["get"]) > 0 {
+		io.WriteString(w, WaitRunCommand)
+		log.Println("获取指令: " + WaitRunCommand)
+		WaitRunCommand = ""
+		return
+	}
+	io.WriteString(w, "")
+	return
+}
+
+func main() {
+	http.HandleFunc("/", Index) //首页
+	log.Printf("控制服务器启动")
+	err := http.ListenAndServe(":7890", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
